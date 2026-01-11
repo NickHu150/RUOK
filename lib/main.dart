@@ -68,6 +68,19 @@ class _HomePageState extends State<HomePage>
     );
 
     _loadStatus();
+    _primeNetwork(); // Pre-trigger network permission dialog
+  }
+
+  Future<void> _primeNetwork() async {
+    try {
+      // Small dummy request to force iOS to show the network permission dialog
+      // before the user actually tries to check-in for the first time.
+      await http
+          .get(Uri.parse('https://www.google.com'))
+          .timeout(const Duration(seconds: 1));
+    } catch (_) {
+      // Ignore results/errors
+    }
   }
 
   @override
@@ -281,7 +294,8 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           child: const Text(
-                            '⚠️ Configure Emergency Settings',
+                            '⚠️ Setup your emergency contact and message to enable automated safety alerts',
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Colors.redAccent,
                               fontSize: 13,
@@ -415,11 +429,21 @@ class _HomePageState extends State<HomePage>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Next Alert: $_nextCheckIn',
+                      'Next alert will be sent to your contact at:',
                       style: TextStyle(
-                        color: Theme.of(context).primaryColor.withOpacity(0.7),
-                        fontSize: 14,
+                        color: Colors.grey.withOpacity(0.9),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _nextCheckIn,
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor.withOpacity(0.9),
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
                         fontFamily: 'monospace',
+                        letterSpacing: 1,
                       ),
                     ),
                   ],
@@ -445,7 +469,7 @@ class _HomePageState extends State<HomePage>
                   ],
                   TextButton(
                     onPressed: () => _launchURL(
-                      'https://gowellapp.me/ruok/privacy.html',
+                      'https://gowellapp.me/ruok/privacy_policy',
                       inApp: true,
                     ),
                     child: const Text(
