@@ -2,14 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:easy_localization/easy_localization.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const RUOKApp());
+  await EasyLocalization.ensureInitialized();
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [
+        Locale('en'),
+        Locale('zh', 'Hans'),
+        Locale('zh', 'Hant'),
+        Locale('ja'),
+        Locale('ko'),
+        Locale('th'),
+        Locale('vi'),
+        Locale('id'),
+        Locale('ms'),
+        Locale('hi'),
+        Locale('tl'),
+        Locale('es'),
+        Locale('pt'),
+        Locale('fr'),
+        Locale('de'),
+        Locale('it'),
+        Locale('ru'),
+        Locale('nl'),
+        Locale('tr'),
+        Locale('pl'),
+        Locale('uk'),
+        Locale('ar'),
+      ],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      child: const RUOKApp(),
+    ),
+  );
 }
 
 class RUOKApp extends StatelessWidget {
@@ -20,6 +53,9 @@ class RUOKApp extends StatelessWidget {
     return MaterialApp(
       title: 'RUOK?',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF0A0A0A),
@@ -46,8 +82,8 @@ class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _breathAnimation;
-  String _status = 'Initializing...';
-  String _nextCheckIn = 'Unknown';
+  String _status = 'initializing'; // key
+  String _nextCheckIn = 'unknown'; // key or date string
   bool _isLoading = false;
   bool _hasCheckedInToday = false;
   bool _isConfigured = false;
@@ -114,17 +150,18 @@ class _HomePageState extends State<HomePage>
 
         final nextDate = lastDate.add(Duration(days: delayDays));
         _nextCheckIn = DateFormat('yyyy-MM-dd HH:mm').format(nextDate);
-        _status = 'System Active';
+        _status = 'system_active';
       } else {
         _hasCheckedInToday = false;
-        _status = 'System Inactive\nPlease configure settings';
+        _status = 'system_inactive';
+        _nextCheckIn = 'unknown';
       }
     });
   }
 
   Future<void> _checkIn() async {
     if (_hasCheckedInToday) {
-      _showSnackBar('You have checked in today. Please come back tomorrow.');
+      _showSnackBar('already_checked_in'.tr());
       return;
     }
 
@@ -141,10 +178,10 @@ class _HomePageState extends State<HomePage>
     final lastEmailId = prefs.getString('last_email_id');
     final message =
         prefs.getString('message') ??
-        'I have been out of contact for $delayDays days. Please check on me.';
+        'default_message'.tr(args: [delayDays.toString()]);
 
     if (emergencyEmail.isEmpty) {
-      _showSnackBar('Please set an emergency email in settings first.');
+      _showSnackBar('err_no_email'.tr());
       setState(() => _isLoading = false);
       return;
     }
@@ -192,13 +229,13 @@ class _HomePageState extends State<HomePage>
           DateTime.now().toIso8601String(),
         );
 
-        _showSnackBar('Check-in successful. Stay safe.');
+        _showSnackBar('check_in_success'.tr());
         _loadStatus();
       } else {
-        _showSnackBar('Failed: ${response.body}');
+        _showSnackBar('err_failed'.tr(args: [response.body]));
       }
     } catch (e) {
-      _showSnackBar('Error: $e');
+      _showSnackBar('err_unknown'.tr(args: [e.toString()]));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -226,7 +263,7 @@ class _HomePageState extends State<HomePage>
       }
     } catch (e) {
       debugPrint('[RUOK] Error launching URL: $e');
-      _showSnackBar('Could not launch page: $url');
+      _showSnackBar('err_launch'.tr(args: [url]));
     }
   }
 
@@ -248,239 +285,280 @@ class _HomePageState extends State<HomePage>
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'RUOK?',
-                      style: TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 8,
-                        color: Theme.of(context).primaryColor,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 20,
-                            color: Theme.of(
-                              context,
-                            ).primaryColor.withOpacity(0.5),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!_isConfigured) ...[
-                      const SizedBox(height: 20),
-                      GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SettingsPage(),
-                          ),
-                        ).then((_) => _loadStatus()),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Colors.red.withOpacity(0.5),
-                            ),
-                          ),
-                          child: const Text(
-                            '⚠️ Setup your emergency contact and message to enable automated safety alerts',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.redAccent,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'app_title'.tr(),
+                                style: TextStyle(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 8,
+                                  color: Theme.of(context).primaryColor,
+                                  shadows: [
+                                    Shadow(
+                                      blurRadius: 20,
+                                      color: Theme.of(
+                                        context,
+                                      ).primaryColor.withOpacity(0.5),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (!_isConfigured) ...[
+                                const SizedBox(height: 16),
+                                GestureDetector(
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SettingsPage(),
+                                    ),
+                                  ).then((_) => _loadStatus()),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: Colors.red.withOpacity(0.5),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'setup_hint'.tr(),
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Colors.redAccent,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(height: 40),
+                              GestureDetector(
+                                onTap: _isLoading ? null : _checkIn,
+                                child: AnimatedBuilder(
+                                  animation: _breathAnimation,
+                                  builder: (context, child) {
+                                    // Only breathe if checked-in or just idle in a nice way
+                                    final currentScale = _hasCheckedInToday
+                                        ? _breathAnimation.value
+                                        : 1.0;
+                                    final glowIntensity = _hasCheckedInToday
+                                        ? (_animationController.value * 0.5 +
+                                              0.5)
+                                        : 0.2;
+
+                                    return Transform.scale(
+                                      scale: currentScale,
+                                      child: Container(
+                                        width: 220,
+                                        height: 220,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: _hasCheckedInToday
+                                              ? const Color(0xFF10B981)
+                                              : Colors.transparent,
+                                          border: Border.all(
+                                            color: _hasCheckedInToday
+                                                ? const Color(0xFF10B981)
+                                                : Theme.of(context).primaryColor
+                                                      .withOpacity(0.3),
+                                            width: 2,
+                                          ),
+                                          boxShadow: [
+                                            // Inner core glow
+                                            BoxShadow(
+                                              color:
+                                                  (_hasCheckedInToday
+                                                          ? const Color(
+                                                              0xFF10B981,
+                                                            )
+                                                          : Theme.of(
+                                                              context,
+                                                            ).primaryColor)
+                                                      .withOpacity(
+                                                        _hasCheckedInToday
+                                                            ? 0.6 *
+                                                                  glowIntensity
+                                                            : 0.1,
+                                                      ),
+                                              blurRadius: _hasCheckedInToday
+                                                  ? 20
+                                                  : 10,
+                                              spreadRadius: _hasCheckedInToday
+                                                  ? 2
+                                                  : 0,
+                                            ),
+                                            // Outer atmospheric glow
+                                            if (_hasCheckedInToday)
+                                              BoxShadow(
+                                                color: const Color(0xFF10B981)
+                                                    .withOpacity(
+                                                      0.3 * glowIntensity,
+                                                    ),
+                                                blurRadius: 60,
+                                                spreadRadius: 15,
+                                              ),
+                                            // Distant ambient glow
+                                            if (_hasCheckedInToday)
+                                              BoxShadow(
+                                                color: const Color(0xFF10B981)
+                                                    .withOpacity(
+                                                      0.15 * glowIntensity,
+                                                    ),
+                                                blurRadius: 100,
+                                                spreadRadius: 30,
+                                              ),
+                                          ],
+                                        ),
+                                        child: Center(
+                                          child: _isLoading
+                                              ? const CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                  strokeWidth: 3,
+                                                )
+                                              : Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    if (_hasCheckedInToday) ...[
+                                                      const Icon(
+                                                        Icons.favorite,
+                                                        size: 64,
+                                                        color: Colors.white,
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 12,
+                                                      ),
+                                                      Text(
+                                                        'status_ok'.tr(),
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          letterSpacing: 0.5,
+                                                        ),
+                                                      ),
+                                                    ] else
+                                                      Text(
+                                                        'check_in_button'.tr(),
+                                                        style: TextStyle(
+                                                          fontSize: 28,
+                                                          fontWeight:
+                                                              FontWeight.w900,
+                                                          letterSpacing: 2,
+                                                          color: Theme.of(
+                                                            context,
+                                                          ).primaryColor,
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 40),
+                              Text(
+                                _status.tr(),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'next_alert_label'.tr(),
+                                style: TextStyle(
+                                  color: Colors.grey.withOpacity(0.9),
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _nextCheckIn.tr(),
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).primaryColor.withOpacity(0.9),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                            ],
                           ),
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 60),
-                    GestureDetector(
-                      onTap: _isLoading ? null : _checkIn,
-                      child: AnimatedBuilder(
-                        animation: _breathAnimation,
-                        builder: (context, child) {
-                          // Only breathe if checked-in or just idle in a nice way
-                          final currentScale = _hasCheckedInToday
-                              ? _breathAnimation.value
-                              : 1.0;
-                          final glowIntensity = _hasCheckedInToday
-                              ? (_animationController.value * 0.5 + 0.5)
-                              : 0.2;
-
-                          return Transform.scale(
-                            scale: currentScale,
-                            child: Container(
-                              width: 220,
-                              height: 220,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _hasCheckedInToday
-                                    ? const Color(0xFF10B981)
-                                    : Colors.transparent,
-                                border: Border.all(
-                                  color: _hasCheckedInToday
-                                      ? const Color(0xFF10B981)
-                                      : Theme.of(
-                                          context,
-                                        ).primaryColor.withOpacity(0.3),
-                                  width: 2,
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (isIOS) ...[
+                              TextButton(
+                                onPressed: () => _launchURL(
+                                  'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
                                 ),
-                                boxShadow: [
-                                  // Inner core glow
-                                  BoxShadow(
-                                    color:
-                                        (_hasCheckedInToday
-                                                ? const Color(0xFF10B981)
-                                                : Theme.of(
-                                                    context,
-                                                  ).primaryColor)
-                                            .withOpacity(
-                                              _hasCheckedInToday
-                                                  ? 0.6 * glowIntensity
-                                                  : 0.1,
-                                            ),
-                                    blurRadius: _hasCheckedInToday ? 20 : 10,
-                                    spreadRadius: _hasCheckedInToday ? 2 : 0,
+                                child: Text(
+                                  'terms_of_use'.tr(),
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
                                   ),
-                                  // Outer atmospheric glow
-                                  if (_hasCheckedInToday)
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF10B981,
-                                      ).withOpacity(0.3 * glowIntensity),
-                                      blurRadius: 60,
-                                      spreadRadius: 15,
-                                    ),
-                                  // Distant ambient glow
-                                  if (_hasCheckedInToday)
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF10B981,
-                                      ).withOpacity(0.15 * glowIntensity),
-                                      blurRadius: 100,
-                                      spreadRadius: 30,
-                                    ),
-                                ],
+                                ),
                               ),
-                              child: Center(
-                                child: _isLoading
-                                    ? const CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 3,
-                                      )
-                                    : Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          if (_hasCheckedInToday) ...[
-                                            const Icon(
-                                              Icons.favorite,
-                                              size: 64,
-                                              color: Colors.white,
-                                            ),
-                                            const SizedBox(height: 12),
-                                            const Text(
-                                              'Safe & Protected',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w700,
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                          ] else
-                                            Text(
-                                              'I\'M OK',
-                                              style: TextStyle(
-                                                fontSize: 28,
-                                                fontWeight: FontWeight.w900,
-                                                letterSpacing: 2,
-                                                color: Theme.of(
-                                                  context,
-                                                ).primaryColor,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
+                              const Text(
+                                '|',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ],
+                            TextButton(
+                              onPressed: () => _launchURL(
+                                'https://gowellapp.me/ruok/privacy_policy',
+                                inApp: true,
+                              ),
+                              child: Text(
+                                'privacy_policy'.tr(),
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
-                          );
-                        },
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 60),
-                    Text(
-                      _status,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Next alert will be sent to your contact at:',
-                      style: TextStyle(
-                        color: Colors.grey.withOpacity(0.9),
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _nextCheckIn,
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor.withOpacity(0.9),
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (isIOS) ...[
-                    TextButton(
-                      onPressed: () => _launchURL(
-                        'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
-                      ),
-                      child: const Text(
-                        'Terms of Use',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ),
-                    const Text('|', style: TextStyle(color: Colors.grey)),
-                  ],
-                  TextButton(
-                    onPressed: () => _launchURL(
-                      'https://gowellapp.me/ruok/privacy_policy',
-                      inApp: true,
-                    ),
-                    child: const Text(
-                      'Privacy Policy',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -526,32 +604,35 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text('settings_title'.tr())),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
           _buildTextField(
-            'Emergency Email',
+            'emergency_email'.tr(),
             _emailController,
             TextInputType.emailAddress,
           ),
           const SizedBox(height: 20),
           _buildTextField(
-            'Notification Message',
+            'notification_msg'.tr(),
             _msgController,
             TextInputType.multiline,
             maxLines: 3,
           ),
           const SizedBox(height: 20),
+          // Language Selector
+          _buildLanguageSelector(),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Delay Days (until alert)',
-                style: TextStyle(color: Colors.grey),
+              Text(
+                'delay_days_label'.tr(),
+                style: const TextStyle(color: Colors.grey),
               ),
               Text(
-                '$_delayDays Days',
+                'delay_days_unit'.tr(args: ['$_delayDays']),
                 style: TextStyle(
                   color: Theme.of(context).primaryColor,
                   fontWeight: FontWeight.bold,
@@ -566,7 +647,9 @@ class _SettingsPageState extends State<SettingsPage> {
             max: 30,
             divisions: 28,
             activeColor: Theme.of(context).primaryColor,
-            label: '${_delayDays < 2 ? 2 : _delayDays} days',
+            label: 'delay_days_unit'.tr(
+              args: [(_delayDays < 2 ? 2 : _delayDays).toString()],
+            ),
             onChanged: (v) => setState(() => _delayDays = v.toInt()),
           ),
           const SizedBox(height: 20),
@@ -578,15 +661,19 @@ class _SettingsPageState extends State<SettingsPage> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.orange.withOpacity(0.3)),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, color: Colors.orangeAccent, size: 20),
-                SizedBox(width: 12),
+                const Icon(
+                  Icons.info_outline,
+                  color: Colors.orangeAccent,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Note: RUOK? has no backend servers. All your settings are stored locally on this device. If you uninstall the app, all data will be permanently deleted.',
-                    style: TextStyle(
+                    'local_storage_warning'.tr(),
+                    style: const TextStyle(
                       color: Colors.orangeAccent,
                       fontSize: 13,
                       height: 1.4,
@@ -604,13 +691,60 @@ class _SettingsPageState extends State<SettingsPage> {
               backgroundColor: Theme.of(context).primaryColor,
               foregroundColor: Colors.black,
             ),
-            child: const Text(
-              'SAVE SETTINGS',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            child: Text(
+              'save_settings_button'.tr(),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLanguageSelector() {
+    final List<Map<String, dynamic>> languages = [
+      {'name': 'English', 'locale': const Locale('en')},
+      {'name': '简体中文', 'locale': const Locale('zh', 'Hans')},
+      {'name': '繁體中文', 'locale': const Locale('zh', 'Hant')},
+      {'name': '日本語', 'locale': const Locale('ja')},
+      {'name': '한국어', 'locale': const Locale('ko')},
+      {'name': 'Español', 'locale': const Locale('es')},
+      {'name': 'Português', 'locale': const Locale('pt')},
+      {'name': 'Français', 'locale': const Locale('fr')},
+      {'name': 'Deutsch', 'locale': const Locale('de')},
+      {'name': 'Italiano', 'locale': const Locale('it')},
+      {'name': 'Русский', 'locale': const Locale('ru')},
+      {'name': 'Nederlands', 'locale': const Locale('nl')},
+      {'name': 'Türkçe', 'locale': const Locale('tr')},
+      {'name': 'Polski', 'locale': const Locale('pl')},
+      {'name': 'Українська', 'locale': const Locale('uk')},
+      {'name': 'العربية', 'locale': const Locale('ar')},
+      {'name': 'ไทย', 'locale': const Locale('th')},
+      {'name': 'Tiếng Việt', 'locale': const Locale('vi')},
+      {'name': 'Bahasa Indonesia', 'locale': const Locale('id')},
+      {'name': 'Bahasa Melayu', 'locale': const Locale('ms')},
+      {'name': 'Filipino', 'locale': const Locale('tl')},
+      {'name': 'हिन्दी', 'locale': const Locale('hi')},
+    ];
+
+    return DropdownButtonFormField<Locale>(
+      value: context.locale,
+      decoration: InputDecoration(
+        labelText: 'language_label'.tr(),
+        border: const OutlineInputBorder(),
+        hintText: 'Select Language',
+      ),
+      items: languages.map((lang) {
+        return DropdownMenuItem<Locale>(
+          value: lang['locale'] as Locale,
+          child: Text(lang['name'] as String),
+        );
+      }).toList(),
+      onChanged: (Locale? newLocale) {
+        if (newLocale != null) {
+          context.setLocale(newLocale);
+        }
+      },
     );
   }
 
