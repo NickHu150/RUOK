@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy - RUOK? Safety Systems</title>
+    <style>
+      :root {
+        --primary-color: #10b981;
+        --bg-color: #0a0a0a;
+        --card-bg: #161616;
+        --text-main: #e5e7eb;
+        --text-dim: #9ca3af;
+        --border-color: #262626;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 60px;
+        padding-top: 40px;
+      }
+
+      .logo {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--primary-color);
+        letter-spacing: 4px;
+        text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        margin-bottom: 10px;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-top: 0;
+      }
+
+      .last-updated {
+        color: var(--text-dim);
+        font-size: 14px;
+      }
+
+      section {
+        background-color: var(--card-bg);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+      }
+
+      h2 {
+        color: var(--primary-color);
+        font-size: 20px;
+        margin-top: 0;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+      }
+
+      h2::before {
+        content: "";
+        display: inline-block;
+        width: 4px;
+        height: 20px;
+        background-color: var(--primary-color);
+        margin-right: 12px;
+        border-radius: 2px;
+      }
+
+      p,
+      li {
+        color: var(--text-main);
+        font-size: 16px;
+      }
+
+      ul {
+        padding-left: 20px;
+      }
+
+      li {
+        margin-bottom: 12px;
+      }
+
+      .highlight {
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      th {
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+
+      footer {
+        text-align: center;
+        padding: 40px 0;
+        color: var(--text-dim);
+        font-size: 14px;
+      }
+
+      a {
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 20px 15px;
+        }
+        section {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div class="logo">RUOK?</div>
+        <h1>Privacy Policy</h1>
+        <p class="last-updated">Last Updated: January 11, 2026</p>
+      </header>
+
+      <section>
+        <h2>1. Purpose of the Privacy Policy</h2>
+        <p>
+          RUOK? (hereinafter referred to as "the App", "the Service", or "We")
+          is a personal safety system designed specifically for individuals
+          living alone. This policy reflects our commitment to protecting the
+          limited personal data required to provide our "Dead Man's Switch"
+          safety features.
+        </p>
+      </section>
+
+      <section>
+        <h2>2. Data Collection & Processing</h2>
+        <p>
+          We minimize data collection to only what is strictly necessary for the
+          emergency alert system:
+        </p>
+        <ul>
+          <li>
+            <span class="highlight">Emergency Contact Email:</span> We process
+            the email address of the person you choose to notify in case of an
+            emergency.
+          </li>
+          <li>
+            <span class="highlight">Personalized Message:</span> Any text you
+            input as your emergency message is stored to be included in the
+            alert email.
+          </li>
+          <li>
+            <span class="highlight">Check-in Timestamps:</span> We record the
+            time of your last check-in to calculate when the next alert should
+            be scheduled.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. How We Store Your Data</h2>
+        <p>We prioritize local storage to maximize your privacy control:</p>
+        <ul>
+          <li>
+            <span class="highlight">Local Storage:</span> Your settings and
+            check-in history are stored locally on your device using encrypted
+            data storage. We do not maintain a permanent profile of your
+            activity on our servers.
+          </li>
+          <li>
+            <span class="highlight">Transient Scheduling:</span> When you
+            perform a check-in, your emergency email and message are temporarily
+            transmitted to our secure backend to schedule the automated alert.
+            This data is only used for the specified delivery purpose.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>4. Third-Party Services & SDKs</h2>
+        <p>
+          We use a limited number of sub-processors to ensure reliable email
+          delivery:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Service</th>
+              <th>Purpose</th>
+              <th>Data Shared</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cloudflare Workers</td>
+              <td>Alert Scheduling</td>
+              <td>Encrypted Email ID, Delay Settings</td>
+            </tr>
+            <tr>
+              <td>Resend.com</td>
+              <td>Email Delivery</td>
+              <td>Emergency Email, Custom Message</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>5. Your Rights</h2>
+        <p>
+          Since RUOK? does not require account creation, you have full control
+          over your data directly within the app:
+        </p>
+        <ul>
+          <li>
+            <span class="highlight">Deletion:</span> You can delete all your
+            personal settings and stored data at any time by clearing the App's
+            storage or uninstalling the App.
+          </li>
+          <li>
+            <span class="highlight">Modification:</span> You can update your
+            emergency contact and message at any time in the "Settings" section.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>6. Contact Information</h2>
+        <p>
+          If you have any questions regarding this Privacy Policy, please
+          contact us at:
+        </p>
+        <p><a href="mailto:support@gowellapp.me">support@gowellapp.me</a></p>
+      </section>
+
+      <footer>&copy; 2026 RUOK? Safety Systems. All rights reserved.</footer>
+    </div>
+  </body>
+</html>
