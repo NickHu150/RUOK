@@ -296,12 +296,19 @@ class _HomePageState extends State<HomePage>
                       Expanded(
                         child: Center(
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
+                              const SizedBox(height: 20),
+                              Image.asset(
+                                'assets/images/app_icon.png',
+                                width: 80,
+                                height: 80,
+                              ),
+                              const SizedBox(height: 10),
                               Text(
                                 'app_title'.tr(),
                                 style: TextStyle(
-                                  fontSize: 48,
+                                  fontSize: 42,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 8,
                                   color: Theme.of(context).primaryColor,
@@ -316,7 +323,7 @@ class _HomePageState extends State<HomePage>
                                 ),
                               ),
                               if (!_isConfigured) ...[
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 12),
                                 GestureDetector(
                                   onTap: () => Navigator.push(
                                     context,
@@ -328,7 +335,7 @@ class _HomePageState extends State<HomePage>
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16,
-                                      vertical: 8,
+                                      vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.red.withOpacity(0.1),
@@ -342,14 +349,14 @@ class _HomePageState extends State<HomePage>
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(
                                         color: Colors.redAccent,
-                                        fontSize: 13,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ),
                                 ),
                               ],
-                              const SizedBox(height: 40),
+                              const SizedBox(height: 20),
                               GestureDetector(
                                 onTap: _isLoading ? null : _checkIn,
                                 child: AnimatedBuilder(
@@ -367,8 +374,11 @@ class _HomePageState extends State<HomePage>
                                     return Transform.scale(
                                       scale: currentScale,
                                       child: Container(
-                                        width: 220,
-                                        height: 220,
+                                        width: 200,
+                                        height: 200,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: _hasCheckedInToday
@@ -436,6 +446,8 @@ class _HomePageState extends State<HomePage>
                                               : Column(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment.center,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
                                                   children: [
                                                     if (_hasCheckedInToday) ...[
                                                       const Icon(
@@ -461,11 +473,13 @@ class _HomePageState extends State<HomePage>
                                                     ] else
                                                       Text(
                                                         'check_in_button'.tr(),
+                                                        textAlign:
+                                                            TextAlign.center,
                                                         style: TextStyle(
-                                                          fontSize: 28,
+                                                          fontSize: 22,
                                                           fontWeight:
                                                               FontWeight.w900,
-                                                          letterSpacing: 2,
+                                                          letterSpacing: 1,
                                                           color: Theme.of(
                                                             context,
                                                           ).primaryColor,
@@ -479,31 +493,31 @@ class _HomePageState extends State<HomePage>
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 40),
+                              const SizedBox(height: 20),
                               Text(
                                 _status.tr(),
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: Colors.grey,
-                                  fontSize: 16,
+                                  fontSize: 15,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 6),
                               Text(
                                 'next_alert_label'.tr(),
                                 style: TextStyle(
                                   color: Colors.grey.withOpacity(0.9),
-                                  fontSize: 12,
+                                  fontSize: 11,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 2),
                               Text(
                                 _nextCheckIn.tr(),
                                 style: TextStyle(
                                   color: Theme.of(
                                     context,
                                   ).primaryColor.withOpacity(0.9),
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   fontFamily: 'monospace',
                                   letterSpacing: 1,
